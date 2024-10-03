@@ -1,16 +1,16 @@
 import { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
-type IListener = (value?: unknown) => void;
-type CustomConfig = InternalAxiosRequestConfig & {
+export type IListener = (value?: unknown) => void;
+export type CustomConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
 };
 
-type RequestObserverOptions = {
+export type RequestObserverOptions = {
   refreshHandler: () => Promise<string>;
   combineAbortSignals?: boolean;
 };
 
-interface AxiosClientInterceptors {
+export interface AxiosClientInterceptors {
   request?: (config: CustomConfig) => CustomConfig;
   response?: {
     onFulfilled?: (response: AxiosResponse) => AxiosResponse;
@@ -26,7 +26,7 @@ interface AxiosClientInterceptors {
   };
 }
 
-interface AxiosClientContructor {
+export interface AxiosClientContructor {
   axiosConfig?: InternalAxiosRequestConfig;
   interceptor?: AxiosClientInterceptors;
   statusCodes?: number[];

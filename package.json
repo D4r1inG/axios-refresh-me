@@ -5,8 +5,9 @@
   "main": "dist/bundle.js",
   "types": "dist/main.d.ts",
   "scripts": {
-    "build": "npx webpack --mode production",
-    "prebuild": "rimraf dist"
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint:fix": "eslint --fix --max-warnings=0 --report-unused-disable-directives --ignore-path .gitignore 'src/**/*.{ts,tsx}'"
   },
   "files": [
     "dist"
@@ -30,18 +31,15 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.25.7",
-    "@babel/preset-env": "^7.25.7",
-    "@types/node": "^22.5.4",
-    "babel-loader": "^9.2.1",
-    "eslint": "^8.57.0",
-    "eslint-config-next": "^14.2.11",
-    "eslint-config-prettier": "^9.1.0",
-    "prettier": "^3.3.3",
-    "rimraf": "^6.0.1",
-    "ts-loader": "^9.5.1",
-    "typescript": "^5.6.2",
-    "webpack": "^5.95.0",
-    "webpack-cli": "^5.1.4"
+    "@types/node": "^18.16.16",
+    "@typescript-eslint/eslint-plugin": "^5.59.8",
+    "@typescript-eslint/parser": "^5.59.8",
+    "dotenv-cli": "^7.2.1",
+    "eslint": "^8.42.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "prettier": "^2.8.8",
+    "tsup": "^6.7.0",
+    "typescript": "^5.1.3"
   }
 }
