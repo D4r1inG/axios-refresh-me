@@ -1,0 +1,37 @@
+{
+  "name": "axios-refresh-me",
+  "version": "0.0.1",
+  "description": "Axios wrapper for refresh token and retry request",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "files": [
+    "lib"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/D4r1inG/axios-refresh-me.git"
+  },
+  "keywords": [
+    "Rainbow",
+    "auth",
+    "SDK"
+  ],
+  "author": "quannt86",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.7",
+    "next": "^14.2.11",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.4",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.11",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.2"
+  }
+}
