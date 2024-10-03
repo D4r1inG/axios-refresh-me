@@ -1,4 +1,4 @@
-import { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import { AxiosError, AxiosResponse, CreateAxiosDefaults, InternalAxiosRequestConfig } from 'axios';
 
 export type IListener = (value?: unknown) => void;
 export type CustomConfig = InternalAxiosRequestConfig & {
@@ -27,7 +27,7 @@ export interface AxiosClientInterceptors {
 }
 
 export interface AxiosClientContructor {
-  axiosConfig?: InternalAxiosRequestConfig;
+  axiosConfig?: CreateAxiosDefaults;
   interceptor?: AxiosClientInterceptors;
   statusCodes?: number[];
 }

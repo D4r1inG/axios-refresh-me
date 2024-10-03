@@ -7,7 +7,6 @@ export default defineConfig({
   platform: 'node',
   format: 'esm',
   target: 'esnext',
-  dts: true,
   treeshake: true,
   bundle: true,
   minify: true,

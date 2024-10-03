@@ -5,7 +5,7 @@
   "main": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsup",
+    "build": "tsup --dts src/index.ts",
     "dev": "tsup --watch",
     "lint:fix": "eslint --fix --max-warnings=0 --report-unused-disable-directives --ignore-path .gitignore 'src/**/*.{ts,tsx}'"
   },
