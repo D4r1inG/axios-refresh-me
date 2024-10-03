@@ -14,9 +14,10 @@
     "url": "git+ssh://git@github.com/D4r1inG/axios-refresh-me.git"
   },
   "keywords": [
-    "Rainbow",
-    "auth",
-    "SDK"
+    "refresh-token",
+    "axios",
+    "retry-request",
+    "axios-wrapper"
   ],
   "author": "quannt86",
   "license": "ISC",
