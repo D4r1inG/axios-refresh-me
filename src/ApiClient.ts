@@ -21,14 +21,14 @@ class AxiosClient {
         const newConfig = await this.handleBaseInterceptReq(axiosConfig);
         return interceptor?.request ? interceptor.request(newConfig) : newConfig;
       },
-      (error) => Promise.reject(error),
+      (error) => Promise.reject(error)
     );
     this.api.interceptors.response.use(
       interceptor?.response?.onFulfilled || ((response: AxiosResponse) => response),
       async (error: AxiosError) => {
         const newError = await this.handleBaseInterceptResError(error, statusCodes);
         return interceptor?.response?.onRejected ? interceptor.response.onRejected(newError) : newError;
-      },
+      }
     );
   }
 
@@ -39,7 +39,7 @@ class AxiosClient {
 
   private handleBaseInterceptResError = async (
     error: AxiosError,
-    statusCodes: AxiosClientContructor['statusCodes'],
+    statusCodes: AxiosClientContructor['statusCodes']
   ) => {
     const config: CustomConfig = error?.config;
     const resError = error?.response;

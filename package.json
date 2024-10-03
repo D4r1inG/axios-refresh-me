@@ -1,10 +1,9 @@
 {
   "name": "axios-refresh-me",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "Axios wrapper for refresh token and retry request",
-  "main": "dist/index.js",
+  "main": "dist/index.mjs",
   "types": "dist/index.d.ts",
-  "type": "module",
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
