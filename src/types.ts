@@ -21,7 +21,7 @@ export interface AxiosClientInterceptors {
         | {
             status: number;
             error: string;
-          },
+          }
     ) => AxiosResponse | AxiosError;
   };
 }

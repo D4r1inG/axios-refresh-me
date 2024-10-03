@@ -1,17 +1,17 @@
 {
   "name": "axios-refresh-me",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Axios wrapper for refresh token and retry request",
   "main": "index.js",
-  "types": "index.d.ts",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
     "lint:fix": "eslint --fix --max-warnings=0 --report-unused-disable-directives --ignore-path .gitignore 'src/**/*.{ts,tsx}'"
   },
   "files": [
-    "dist/*.js",
-    "dist/*.d.ts"
+    "dist",
+    "index.mjs"
   ],
   "repository": {
     "type": "git",
