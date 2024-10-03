@@ -2,12 +2,14 @@
   "name": "axios-refresh-me",
   "version": "0.0.2",
   "description": "Axios wrapper for refresh token and retry request",
-  "main": "lib/index.js",
+  "main": "dist/bundle.js",
+  "types": "dist/main.d.ts",
   "scripts": {
-    "build": "tsc"
+    "prebuild": "rimraf dist",
+    "build": "webpack --config webpack.config.js --progress --mode=production"
   },
   "files": [
-    "lib"
+    "dist"
   ],
   "repository": {
     "type": "git",
@@ -28,11 +30,18 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@babel/core": "^7.25.7",
+    "@babel/preset-env": "^7.25.7",
     "@types/node": "^22.5.4",
+    "babel-loader": "^9.2.1",
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.11",
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.3.3",
-    "typescript": "^5.6.2"
+    "rimraf": "^6.0.1",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.6.2",
+    "webpack": "^5.95.0",
+    "webpack-cli": "^5.1.4"
   }
 }

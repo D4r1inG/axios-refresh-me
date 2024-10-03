@@ -89,6 +89,7 @@
     "@typescript-eslint/no-unused-vars": ["warn", { "vars": "all", "args": "none" }],
     "@typescript-eslint/no-inferrable-types": ["off"],
     "@typescript-eslint/no-empty-function": ["off"],
+    "@typescript-eslint/no-var-requires": "warn",
     "semi": ["error", "always"],
     "default-case": "error",
     "no-multi-spaces": "error"

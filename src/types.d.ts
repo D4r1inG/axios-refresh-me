@@ -1,14 +1,12 @@
-/* eslint-disable no-unused-vars */
 import { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
-export type IListener = (value?: unknown) => void;
-export type CustomConfig = InternalAxiosRequestConfig & {
+type IListener = (value?: unknown) => void;
+type CustomConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
 };
 
-export type RequestObserverOptions = {
+type RequestObserverOptions = {
   refreshHandler: () => Promise<string>;
-  onRefreshFail?: () => void;
   combineAbortSignals?: boolean;
 };
 
@@ -28,7 +26,7 @@ interface AxiosClientInterceptors {
   };
 }
 
-export interface AxiosClientContructor {
+interface AxiosClientContructor {
   axiosConfig?: InternalAxiosRequestConfig;
   interceptor?: AxiosClientInterceptors;
   statusCodes?: number[];

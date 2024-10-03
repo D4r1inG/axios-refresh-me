@@ -1,5 +1,5 @@
 import { GenericAbortSignal } from 'axios';
-import { CustomConfig, IListener, RequestObserverOptions } from './interfaces';
+import { CustomConfig, IListener, RequestObserverOptions } from './types';
 
 class RequestObserver {
   private readonly suspendedQueue: Set<IListener>;
@@ -7,14 +7,14 @@ class RequestObserver {
   private abortController: AbortController;
   private isSuspended: boolean = false;
 
-  constructor(options?: RequestObserverOptions) {
+  constructor(options: RequestObserverOptions) {
     this.suspendedQueue = new Set<IListener>();
     this.baseOptions = options;
     this.abortController = new AbortController();
   }
 
   // Combine signal from component signal and observer signal into one
-  private combineSignals = (aixosSignal: GenericAbortSignal): AbortSignal => {
+  private combineSignals = (aixosSignal?: GenericAbortSignal): AbortSignal => {
     const observerSignal = this.abortController.signal;
     if (!aixosSignal || !this?.baseOptions?.combineAbortSignals) return observerSignal;
 
@@ -54,8 +54,6 @@ class RequestObserver {
     } catch (e) {
       console.error(e);
     }
-
-    this.baseOptions.onRefreshFail();
   };
 
   // If the request is marked as retry, it will refresh the token

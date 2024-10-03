@@ -2,7 +2,7 @@
 /* eslint-disable no-unused-vars */
 import axios, { AxiosResponse, AxiosInstance, AxiosError } from 'axios';
 import RequestObserver from './RequestObserver';
-import { AxiosClientContructor, CustomConfig } from './interfaces';
+import { AxiosClientContructor, CustomConfig } from './types';
 
 class AxiosClient {
   private readonly api: AxiosInstance;
