@@ -15,43 +15,68 @@ npm install axios-refresh-me
 ## Example
 
 ```ts
-import { AxiosClient, RequestObserver } from 'axios-refresh-me';
+import { AxiosClient, registerRequestObserver } from 'axios-refresh-me';
 
-// Define your refresh token handler
-const refreshHandler = async () => {
-  // Logic to get a new token
-  const newToken = await new Promise((resolve) => {
-    setTimeout(() => resolve('new-token'), 5000);
-  });
-
-  return newToken;
-};
-
-// Create a RequestObserver instance
-const observer = new RequestObserver({
-  refreshHandler,
-  combineAbortSignals: true,
+// Register the request observer with custom options
+registerRequestObserver({
+  refreshHandler: async () => {
+    // Logic to get a new token
+    const newToken = await getNewToken();
+    return newToken;
+  },
+  statusCodes: [401], // Status codes to trigger the refresh handler
 });
 
-// Create an AxiosClient instance
-const apiClient = new AxiosClient(observer, {
+// Create an instance of AxiosClient
+const { instance } = new AxiosClient({
   axiosConfig: {
     baseURL: 'https://api.example.com',
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
   },
-  statusCodes: [401, 403],
+  interceptor: {
+    request: (config) => {
+      // Modify request config if needed
+      return config;
+    },
+    response: {
+      onFulfilled: (response) => {
+        // Handle successful response
+        return response;
+      },
+      onRejected: (error) => {
+        // Handle error response
+        return Promise.reject(error);
+      },
+    },
+  },
 });
 
-// Use the AxiosClient instance to make requests
-apiClient.instance
-  .get('/protected-endpoint')
+// Example API call
+// Retry if request failed with 401 status code
+instance
+  .get('/data')
   .then((response) => {
     console.log('Data:', response.data);
   })
   .catch((error) => {
     console.error('Error:', error);
   });
+
+// Function to get the current token
+function getToken() {
+  // Logic to get the current token
+  return 'current-token';
+}
+
+// Function to get a new token
+async function getNewToken() {
+  // Logic to get a new token
+  return 'new-token';
+}
 ```
 
 ## Author
 
-quannt
+D4r1inG

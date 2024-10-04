@@ -8,6 +8,7 @@ export type CustomConfig = InternalAxiosRequestConfig & {
 export type RequestObserverOptions = {
   refreshHandler: () => Promise<string>;
   combineAbortSignals?: boolean;
+  statusCodes?: number[];
 };
 
 export interface AxiosClientInterceptors {
@@ -29,5 +30,4 @@ export interface AxiosClientInterceptors {
 export interface AxiosClientContructor {
   axiosConfig?: CreateAxiosDefaults;
   interceptor?: AxiosClientInterceptors;
-  statusCodes?: number[];
 }

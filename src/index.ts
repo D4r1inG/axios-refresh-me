@@ -1,4 +1,1 @@
-import AxiosClient from './ApiClient';
-import RequestObserver from './RequestObserver';
-
-export { AxiosClient, RequestObserver };
+export { AxiosClient, registerRequestObserver } from './ApiClient';
