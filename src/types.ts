@@ -2,28 +2,24 @@ import { AxiosError, AxiosResponse, CreateAxiosDefaults, InternalAxiosRequestCon
 
 export type IListener = (value?: unknown) => void;
 export type CustomConfig = InternalAxiosRequestConfig & {
-  _retry?: boolean;
+  _retryCount?: number;
 };
 
 export type RequestObserverOptions = {
   refreshHandler: () => Promise<string>;
   combineAbortSignals?: boolean;
   statusCodes?: number[];
+  retryCount?: number;
 };
 
 export interface AxiosClientInterceptors {
-  request?: (config: CustomConfig) => CustomConfig;
+  request?: {
+    onFulfilled?: (config: CustomConfig) => CustomConfig;
+    onRejected?: (error: AxiosError) => AxiosError;
+  };
   response?: {
     onFulfilled?: (response: AxiosResponse) => AxiosResponse;
-    onRejected?: (
-      error:
-        | AxiosResponse<any, any>
-        | AxiosError<unknown, any>
-        | {
-            status: number;
-            error: string;
-          }
-    ) => AxiosResponse | AxiosError;
+    onRejected?: (error: AxiosError) => AxiosResponse | AxiosError;
   };
 }
 

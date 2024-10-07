@@ -1,41 +1,67 @@
-import axios, { AxiosResponse, AxiosInstance, AxiosError, GenericAbortSignal } from 'axios';
-import { AxiosClientContructor, CustomConfig, IListener, RequestObserverOptions } from './types';
+import axios, { AxiosResponse, AxiosError, GenericAbortSignal, AxiosInstance } from 'axios';
+import {
+  AxiosClientContructor,
+  CustomConfig,
+  IListener,
+  RequestObserverOptions,
+  AxiosClientInterceptors,
+} from './types';
 
 let requestObserverInstance: RequestObserver;
 const BASE_OBSERVER_OPTIONS: RequestObserverOptions = {
   refreshHandler: () => Promise.resolve(''),
   combineAbortSignals: false,
   statusCodes: [401],
+  retryCount: 1,
+};
+const BASE_AXIOS_CONTRUCTOR: AxiosClientContructor = {
+  axiosConfig: {},
+  interceptor: {
+    request: {
+      onFulfilled: (response) => response,
+      onRejected: (error) => error,
+    },
+    response: {
+      onFulfilled: (response) => response.data,
+      onRejected: (error) => error,
+    },
+  },
 };
 
 const registerRequestObserver = (options: RequestObserverOptions) => {
-  if (!requestObserverInstance) requestObserverInstance = new RequestObserver(options);
-  return requestObserverInstance;
+  if (requestObserverInstance)
+    console.error(
+      'RequestObserver is already registered, register another one will overide the current one.'
+    );
+
+  requestObserverInstance = new RequestObserver(options);
 };
 
 class RequestObserver {
   private readonly suspendedQueue: Set<IListener>;
   private readonly baseOptions: RequestObserverOptions;
   private abortController: AbortController;
-  private isSuspended: boolean = false;
+  private isSuspended: boolean;
 
   constructor(options: RequestObserverOptions) {
     this.suspendedQueue = new Set<IListener>();
+    // Override default options with user options
     this.baseOptions = { ...BASE_OBSERVER_OPTIONS, ...options };
     this.abortController = new AbortController();
+    this.isSuspended = false;
   }
 
   // Combine signal from component signal and observer signal into one
-  private combineSignals = (aixosSignal?: GenericAbortSignal): AbortSignal => {
+  private combineSignals = (axiosSignal?: GenericAbortSignal): AbortSignal => {
     const observerSignal = this.abortController.signal;
-    if (!aixosSignal || !this?.baseOptions?.combineAbortSignals) return observerSignal;
+    if (!axiosSignal || !this?.baseOptions?.combineAbortSignals) return observerSignal;
 
     const combinedController = new AbortController();
 
     const abortHandler = () => combinedController.abort();
 
     observerSignal.onabort = abortHandler;
-    aixosSignal.onabort = abortHandler;
+    axiosSignal.onabort = abortHandler;
 
     return combinedController.signal;
   };
@@ -45,10 +71,8 @@ class RequestObserver {
   // Notify all listeners that the token has been updated and clear the suspendedQueue
   private notify = () => {
     this.abortController = new AbortController();
-
     this.suspendedQueue.forEach((l) => l());
     this.suspendedQueue.clear();
-
     this.isSuspended = false;
   };
 
@@ -72,25 +96,27 @@ class RequestObserver {
   // If the observer is suspended, it will subscribe to the suspendQueue
   // If the request has an existed signal, it will combine with the observer signal
   // Finally return the signal to axios interceptor request,
-  private getReqSignal = async ({ _retry, signal }: CustomConfig): Promise<AbortSignal> => {
-    if (_retry || this.isSuspended) await this.exchangeToken();
-    return this.combineSignals(signal);
-  };
+  public baseRequestIntercept = async (config: CustomConfig) => {
+    // Init retry count = 0 if not exist
+    if (!config?._retryCount) config._retryCount = 0;
+    if (config?._retryCount > 0 || this.isSuspended) await this.exchangeToken();
 
-  public baseReqIntercept = async (config: CustomConfig) => {
-    config.signal = await this.getReqSignal(config);
+    config.signal = this.combineSignals(config.signal);
     return config;
   };
 
-  public baseResIntercept = async (error: AxiosError, api: AxiosInstance) => {
+  public baseResponseIntercept = async (error: AxiosError, api: AxiosInstance) => {
     const config: CustomConfig = error?.config;
     const resError = error?.response;
     const isCancelNotFromUser = axios.isCancel(error) && this.isSuspended;
 
-    if (config?._retry) return Promise.reject('Observer refresh token success, but retrying still failed!');
+    if (config?._retryCount >= this.baseOptions.retryCount)
+      return Promise.reject(
+        `Observer refresh token success, but retrying still failed after ${config._retryCount} time(s).`
+      );
 
     if (this.baseOptions.statusCodes?.includes(resError?.status) || isCancelNotFromUser) {
-      config._retry = true;
+      config._retryCount += 1;
 
       return api(config);
     }
@@ -101,33 +127,52 @@ class RequestObserver {
 
 class AxiosClient {
   private readonly api: AxiosInstance;
-  private readonly observer: RequestObserver;
+  private readonly interceptor: AxiosClientInterceptors;
 
-  constructor(config: AxiosClientContructor = {}) {
-    if (!requestObserverInstance) throw new Error('RequestObserver is not registered!');
+  constructor(config: AxiosClientContructor = BASE_AXIOS_CONTRUCTOR) {
+    if (!requestObserverInstance)
+      throw new Error(
+        'RequestObserver is not registered!, please register it first with registerRequestObserver'
+      );
 
-    this.observer = requestObserverInstance;
-    const { axiosConfig = {}, interceptor = {} } = config;
+    const { axiosConfig, interceptor } = config;
+    this.interceptor = interceptor;
 
     this.api = axios.create({
       ...axiosConfig,
     });
 
-    this.api.interceptors.request.use(
-      async (axiosConfig) => {
-        const newConfig = await this.observer.baseReqIntercept(axiosConfig);
-        return interceptor?.request ? interceptor.request(newConfig) : newConfig;
-      },
-      (error) => Promise.reject(error)
-    );
-    this.api.interceptors.response.use(
-      interceptor?.response?.onFulfilled || ((response: AxiosResponse) => response),
-      async (error: AxiosError) => {
-        const newError = await this.observer.baseResIntercept(error, this.api);
-        return interceptor?.response?.onRejected ? interceptor.response.onRejected(newError) : newError;
-      }
-    );
+    this.api.interceptors.request.use(this.onReqFullfilled, this.onReqRejected);
+    this.api.interceptors.response.use(this.onResFullfilled, this.onResRejected);
   }
+
+  private onReqFullfilled = async (axiosConfig: CustomConfig) => {
+    const newConfig = await requestObserverInstance.baseRequestIntercept(axiosConfig);
+
+    return this.interceptor?.request?.onFulfilled
+      ? this.interceptor?.request?.onFulfilled(newConfig)
+      : newConfig;
+  };
+
+  private onReqRejected = (error: AxiosError) => {
+    return this.interceptor?.request?.onRejected
+      ? this.interceptor?.request?.onRejected(error)
+      : Promise.reject(error);
+  };
+
+  private onResFullfilled = (response: AxiosResponse) => {
+    return this.interceptor?.response?.onFulfilled
+      ? this.interceptor?.response?.onFulfilled(response)
+      : response;
+  };
+
+  private onResRejected = async (error: AxiosError) => {
+    const newError = await requestObserverInstance.baseResponseIntercept(error, this.api);
+
+    return this.interceptor?.response?.onRejected
+      ? this.interceptor.response.onRejected(newError as any)
+      : newError;
+  };
 
   get instance() {
     return this.api;
