@@ -12,6 +12,12 @@ To install the package, use npm or yarn:
 npm install axios-refresh-me
 ```
 
+## Usage
+
+**Axios Refresh Me** uses a request observer to monitor requests and trigger the refresh handler when necessary. If the request fails due to a specified status code, the request observer will cancel all pending requests and refresh the token. After successfully refreshing the token, the request observer will retry the failed requests and the canceled requests automatically.
+
+See the example below for a basic implementation of **Axios Refresh Me**.
+
 ## Example
 
 ```ts
@@ -19,12 +25,23 @@ import { AxiosClient, registerRequestObserver } from 'axios-refresh-me';
 
 // Register the request observer with custom options
 registerRequestObserver({
+  // Logic to get a new token
   refreshHandler: async () => {
-    // Logic to get a new token
     const newToken = await getNewToken();
     return newToken;
   },
-  statusCodes: [401], // Status codes to trigger the refresh handler
+  // Status codes to trigger the refresh handler, default is [401]
+  statusCodes: [401],
+  // Retry count for the requests after refreshing the token successfully, default is 1
+  retryCount: 1,
+  // The request observer uses abort signals to cancel the requests, set this option to true to combine the abort signals
+  // from the request observer and default signal from the Axios request, default is false
+  combineAbortSignals: false,
+  // Function to determine if the request should be retried, will override the statusCodes option, default is undefined
+  shouldRefresh: (error) => {
+    // Logic to determine if the request should be retried
+    return error.response?.status === 401;
+  },
 });
 
 // Create an instance of AxiosClient
@@ -35,10 +52,16 @@ const { instance } = new AxiosClient({
       Authorization: `Bearer ${getToken()}`,
     },
   },
-  interceptor: {
-    request: (config) => {
-      // Modify request config if needed
-      return config;
+  interceptors: {
+    request: {
+      onFulfilled: (config) => {
+        // Handle successful request
+        return config;
+      },
+      onRejected: (error) => {
+        // Handle error request
+        return Promise.reject(error);
+      },
     },
     response: {
       onFulfilled: (response) => {

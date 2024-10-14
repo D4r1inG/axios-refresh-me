@@ -10,20 +10,21 @@ export type RequestObserverOptions = {
   combineAbortSignals?: boolean;
   statusCodes?: number[];
   retryCount?: number;
+  shouldRefresh?: (error: AxiosError) => boolean;
 };
 
 export interface AxiosClientInterceptors {
   request?: {
     onFulfilled?: (config: CustomConfig) => CustomConfig;
-    onRejected?: (error: AxiosError) => AxiosError;
+    onRejected?: (error: AxiosError) => any | void;
   };
   response?: {
     onFulfilled?: (response: AxiosResponse) => AxiosResponse;
-    onRejected?: (error: AxiosError) => AxiosResponse | AxiosError;
+    onRejected?: (error: AxiosError) => any | void;
   };
 }
 
 export interface AxiosClientContructor {
   axiosConfig?: CreateAxiosDefaults;
-  interceptor?: AxiosClientInterceptors;
+  interceptors?: AxiosClientInterceptors;
 }

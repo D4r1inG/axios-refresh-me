@@ -8,15 +8,17 @@ import {
 } from './types';
 
 let requestObserverInstance: RequestObserver;
+
 const BASE_OBSERVER_OPTIONS: RequestObserverOptions = {
   refreshHandler: () => Promise.resolve(''),
   combineAbortSignals: false,
   statusCodes: [401],
   retryCount: 1,
 };
+
 const BASE_AXIOS_CONTRUCTOR: AxiosClientContructor = {
   axiosConfig: {},
-  interceptor: {
+  interceptors: {
     request: {
       onFulfilled: (response) => response,
       onRejected: (error) => error,
@@ -108,14 +110,18 @@ class RequestObserver {
   public baseResponseIntercept = async (error: AxiosError, api: AxiosInstance) => {
     const config: CustomConfig = error?.config;
     const resError = error?.response;
-    const isCancelNotFromUser = axios.isCancel(error) && this.isSuspended;
+    const isCancelFromReqObserver = axios.isCancel(error) && this.isSuspended;
+
+    const shouldRefresh = this.baseOptions.shouldRefresh
+      ? this.baseOptions.shouldRefresh(error)
+      : this.baseOptions.statusCodes?.includes(resError?.status);
 
     if (config?._retryCount >= this.baseOptions.retryCount)
       return Promise.reject(
         `Observer refresh token success, but retrying still failed after ${config._retryCount} time(s).`
       );
 
-    if (this.baseOptions.statusCodes?.includes(resError?.status) || isCancelNotFromUser) {
+    if (shouldRefresh || isCancelFromReqObserver) {
       config._retryCount += 1;
 
       return api(config);
@@ -135,8 +141,8 @@ class AxiosClient {
         'RequestObserver is not registered!, please register it first with registerRequestObserver'
       );
 
-    const { axiosConfig, interceptor } = config;
-    this.interceptor = interceptor;
+    const { axiosConfig, interceptors } = config;
+    this.interceptor = interceptors;
 
     this.api = axios.create({
       ...axiosConfig,
