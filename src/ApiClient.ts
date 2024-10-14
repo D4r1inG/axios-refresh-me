@@ -175,6 +175,9 @@ class AxiosClient {
   private onResRejected = async (error: AxiosError) => {
     const newError = await requestObserverInstance.baseResponseIntercept(error, this.api);
 
+    // Check if newError is AxiosError
+    if (!axios.isAxiosError(newError)) return newError;
+
     return this.interceptor?.response?.onRejected
       ? this.interceptor.response.onRejected(newError as any)
       : newError;
