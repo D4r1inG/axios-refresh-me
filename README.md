@@ -23,13 +23,29 @@ See the example below for a basic implementation of **Axios Refresh Me**.
 ```ts
 import { AxiosClient, registerRequestObserver } from 'axios-refresh-me';
 
+// Function to get the current token
+function getToken() {
+  // Logic to get the current token
+  return 'current-token';
+}
+
+// Function to get a new token
+async function refreshToken() {
+  // Logic to get a new token
+  const newToken = await new Promise((resolve) => {
+    setTimeout(() => {
+      resolve('new-token');
+    }, 1000);
+  });
+
+  //  Remember to update the token in your token storage
+  updateToken(newToken);
+}
+
 // Register the request observer with custom options
 registerRequestObserver({
   // Logic to get a new token
-  refreshHandler: async () => {
-    const newToken = await getNewToken();
-    return newToken;
-  },
+  refreshHandler: refreshToken,
   // Status codes to trigger the refresh handler, default is [401]
   statusCodes: [401],
   // Retry count for the requests after refreshing the token successfully, default is 1
@@ -87,17 +103,7 @@ instance
     console.error('Error:', error);
   });
 
-// Function to get the current token
-function getToken() {
-  // Logic to get the current token
-  return 'current-token';
-}
 
-// Function to get a new token
-async function getNewToken() {
-  // Logic to get a new token
-  return 'new-token';
-}
 ```
 
 ## Author

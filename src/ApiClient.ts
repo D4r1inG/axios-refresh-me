@@ -16,7 +16,7 @@ const BASE_OBSERVER_OPTIONS: RequestObserverOptions = {
   retryCount: 1,
 };
 
-const BASE_AXIOS_CONTRUCTOR: AxiosClientContructor = {
+const BASE_AXIOS_CONSTRUCTOR: AxiosClientContructor = {
   axiosConfig: {},
   interceptors: {
     request: {
@@ -33,13 +33,13 @@ const BASE_AXIOS_CONTRUCTOR: AxiosClientContructor = {
 const registerRequestObserver = (options: RequestObserverOptions) => {
   if (requestObserverInstance)
     console.error(
-      'RequestObserver is already registered, register another one will overide the current one.'
+      'RequestObserver is already registered, register another one will override the current one.'
     );
 
   requestObserverInstance = new RequestObserver(options);
 };
 
-class RequestObserver {
+export class RequestObserver {
   private readonly suspendedQueue: Set<IListener>;
   private readonly baseOptions: RequestObserverOptions;
   private abortController: AbortController;
@@ -135,7 +135,7 @@ class AxiosClient {
   private readonly api: AxiosInstance;
   private readonly interceptor: AxiosClientInterceptors;
 
-  constructor(config: AxiosClientContructor = BASE_AXIOS_CONTRUCTOR) {
+  constructor(config: AxiosClientContructor = BASE_AXIOS_CONSTRUCTOR) {
     if (!requestObserverInstance)
       throw new Error(
         'RequestObserver is not registered!, please register it first with registerRequestObserver'
@@ -148,11 +148,11 @@ class AxiosClient {
       ...axiosConfig,
     });
 
-    this.api.interceptors.request.use(this.onReqFullfilled, this.onReqRejected);
-    this.api.interceptors.response.use(this.onResFullfilled, this.onResRejected);
+    this.api.interceptors.request.use(this.onReqFulfilled, this.onReqRejected);
+    this.api.interceptors.response.use(this.onResFulfilled, this.onResRejected);
   }
 
-  private onReqFullfilled = async (axiosConfig: CustomConfig) => {
+  private onReqFulfilled = async (axiosConfig: CustomConfig) => {
     const newConfig = await requestObserverInstance.baseRequestIntercept(axiosConfig);
 
     return this.interceptor?.request?.onFulfilled
@@ -166,7 +166,7 @@ class AxiosClient {
       : Promise.reject(error);
   };
 
-  private onResFullfilled = (response: AxiosResponse) => {
+  private onResFulfilled = (response: AxiosResponse) => {
     return this.interceptor?.response?.onFulfilled
       ? this.interceptor?.response?.onFulfilled(response)
       : response;
