@@ -10,7 +10,7 @@ import {
 let requestObserverInstance: RequestObserver;
 
 const BASE_OBSERVER_OPTIONS: RequestObserverOptions = {
-  refreshHandler: () => Promise.resolve(''),
+  refreshHandler: () => Promise.resolve(),
   combineAbortSignals: false,
   statusCodes: [401],
   retryCount: 1,
@@ -87,10 +87,10 @@ export class RequestObserver {
     this.abortController.abort();
 
     try {
-      const token = await this.baseOptions.refreshHandler();
-      if (token) return this.notify();
+      await this.baseOptions.refreshHandler();
+      return this.notify();
     } catch (e) {
-      console.error(e);
+      console.error('Can not notify the suspended queue due to error in refreshHandler', e);
     }
   };
 

@@ -6,7 +6,7 @@ export type CustomConfig = InternalAxiosRequestConfig & {
 };
 
 export type RequestObserverOptions = {
-  refreshHandler: () => Promise<string>;
+  refreshHandler: () => Promise<void>;
   combineAbortSignals?: boolean;
   statusCodes?: number[];
   retryCount?: number;
