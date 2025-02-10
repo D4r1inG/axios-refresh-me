@@ -102,9 +102,11 @@ instance
   .catch((error) => {
     console.error('Error:', error);
   });
-
-
 ```
+
+## License
+
+This project is licensed under the [MIT License](./LICENSE.md).
 
 ## Author
 
