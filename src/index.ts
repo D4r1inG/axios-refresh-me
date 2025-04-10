@@ -1,1 +1,2 @@
-export { AxiosClient, registerRequestObserver } from './ApiClient';
+import AxiosInstanceFactory from './ApiClient';
+export default AxiosInstanceFactory;

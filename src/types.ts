@@ -24,7 +24,6 @@ export interface AxiosClientInterceptors {
   };
 }
 
-export interface AxiosClientContructor {
-  axiosConfig?: CreateAxiosDefaults;
+export interface AxiosClientContructor extends CreateAxiosDefaults {
   interceptors?: AxiosClientInterceptors;
 }

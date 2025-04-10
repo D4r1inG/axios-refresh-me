@@ -7,8 +7,6 @@ import {
   AxiosClientInterceptors,
 } from './types';
 
-let requestObserverInstance: RequestObserver;
-
 const BASE_OBSERVER_OPTIONS: RequestObserverOptions = {
   refreshHandler: () => Promise.resolve(),
   combineAbortSignals: false,
@@ -17,7 +15,6 @@ const BASE_OBSERVER_OPTIONS: RequestObserverOptions = {
 };
 
 const BASE_AXIOS_CONSTRUCTOR: AxiosClientContructor = {
-  axiosConfig: {},
   interceptors: {
     request: {
       onFulfilled: (response) => response,
@@ -28,15 +25,6 @@ const BASE_AXIOS_CONSTRUCTOR: AxiosClientContructor = {
       onRejected: (error) => error,
     },
   },
-};
-
-const registerRequestObserver = (options: RequestObserverOptions) => {
-  if (requestObserverInstance)
-    console.error(
-      'RequestObserver is already registered, register another one will override the current one.'
-    );
-
-  requestObserverInstance = new RequestObserver(options);
 };
 
 export class RequestObserver {
@@ -134,18 +122,15 @@ export class RequestObserver {
 class AxiosClient {
   private readonly api: AxiosInstance;
   private readonly interceptor: AxiosClientInterceptors;
+  private readonly observer: RequestObserver;
 
-  constructor(config: AxiosClientContructor = BASE_AXIOS_CONSTRUCTOR) {
-    if (!requestObserverInstance)
-      throw new Error(
-        'RequestObserver is not registered!, please register it first with registerRequestObserver'
-      );
-
-    const { axiosConfig, interceptors } = config;
+  constructor(config: AxiosClientContructor = BASE_AXIOS_CONSTRUCTOR, observer: RequestObserver) {
+    const { interceptors, ...restConfig } = config;
+    this.observer = observer;
     this.interceptor = interceptors;
 
     this.api = axios.create({
-      ...axiosConfig,
+      ...restConfig,
     });
 
     this.api.interceptors.request.use(this.onReqFulfilled, this.onReqRejected);
@@ -153,7 +138,7 @@ class AxiosClient {
   }
 
   private onReqFulfilled = async (axiosConfig: CustomConfig) => {
-    const newConfig = await requestObserverInstance.baseRequestIntercept(axiosConfig);
+    const newConfig = await this.observer.baseRequestIntercept(axiosConfig);
 
     return this.interceptor?.request?.onFulfilled
       ? this.interceptor?.request?.onFulfilled(newConfig)
@@ -173,7 +158,7 @@ class AxiosClient {
   };
 
   private onResRejected = async (error: AxiosError) => {
-    const newError = await requestObserverInstance.baseResponseIntercept(error, this.api);
+    const newError = await this.observer.baseResponseIntercept(error, this.api);
 
     // Check if newError is AxiosError
     if (!axios.isAxiosError(newError)) return newError;
@@ -188,4 +173,22 @@ class AxiosClient {
   }
 }
 
-export { AxiosClient, registerRequestObserver };
+class AxiosInstanceFactory {
+  private static observer: RequestObserver;
+
+  static use(config: RequestObserverOptions) {
+    if (!this.observer) {
+      this.observer = new RequestObserver(config);
+    }
+  }
+
+  static getInstance(config: AxiosClientContructor) {
+    if (!this.observer) {
+      throw new Error('RequestObserver is not registered!');
+    }
+
+    return new AxiosClient(config, this.observer).instance;
+  }
+}
+
+export default AxiosInstanceFactory;

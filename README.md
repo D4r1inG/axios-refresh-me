@@ -21,7 +21,7 @@ See the example below for a basic implementation of **Axios Refresh Me**.
 ## Example
 
 ```ts
-import { AxiosClient, registerRequestObserver } from 'axios-refresh-me';
+import AxiosInstanceFactory from 'axios-refresh-me';
 
 // Function to get the current token
 function getToken() {
@@ -43,7 +43,7 @@ async function refreshToken() {
 }
 
 // Register the request observer with custom options
-registerRequestObserver({
+AxiosInstanceFactory.use({
   // Logic to get a new token
   refreshHandler: refreshToken,
   // Status codes to trigger the refresh handler, default is [401]
@@ -61,12 +61,10 @@ registerRequestObserver({
 });
 
 // Create an instance of AxiosClient
-const { instance } = new AxiosClient({
-  axiosConfig: {
-    baseURL: 'https://api.example.com',
-    headers: {
-      Authorization: `Bearer ${getToken()}`,
-    },
+const instance = AxiosInstanceFactory.getInstance({
+  baseURL: 'https://api.example.com',
+  headers: {
+    Authorization: `Bearer ${getToken()}`,
   },
   interceptors: {
     request: {
