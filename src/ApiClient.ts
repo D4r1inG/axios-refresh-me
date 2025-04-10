@@ -233,6 +233,4 @@ class AxiosInstanceFactory {
   }
 }
 
-AxiosInstanceFactory.interceptor.request.use((config) => config);
-
 export default AxiosInstanceFactory;
