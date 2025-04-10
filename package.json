@@ -1,6 +1,6 @@
 {
   "name": "axios-refresh-me",
-  "version": "0.0.25",
+  "version": "0.0.26",
   "description": "Axios wrapper for refresh token and retry request",
   "main": "dist/index.mjs",
   "types": "dist/index.d.ts",
