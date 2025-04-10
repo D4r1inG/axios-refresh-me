@@ -60,16 +60,23 @@ AxiosInstanceFactory.use({
   },
 });
 
+AxiosInstanceFactory.interceptor.request.use((config) => {
+  // Logic to modify the request config before sending the request
+  config.headers['Authorization'] = `Bearer ${getToken()}`;
+  return config;
+});
+
 // Create an instance of AxiosClient
 const instance = AxiosInstanceFactory.getInstance({
   baseURL: 'https://api.example.com',
   headers: {
-    Authorization: `Bearer ${getToken()}`,
+    'Content-Type': 'application/json',
   },
+  // Or you can override the default options
   interceptors: {
     request: {
       onFulfilled: (config) => {
-        // Handle successful request
+        config.headers['Authorization'] = `Bearer ${getToken()}`;
         return config;
       },
       onRejected: (error) => {

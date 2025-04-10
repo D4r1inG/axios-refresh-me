@@ -121,17 +121,25 @@ export class RequestObserver {
 
 class AxiosClient {
   private readonly api: AxiosInstance;
-  private readonly interceptor: AxiosClientInterceptors;
+  private readonly mergedInterceptors: AxiosClientInterceptors;
   private readonly observer: RequestObserver;
 
-  constructor(config: AxiosClientContructor = BASE_AXIOS_CONSTRUCTOR, observer: RequestObserver) {
-    const { interceptors, ...restConfig } = config;
+  constructor(
+    config: AxiosClientContructor = BASE_AXIOS_CONSTRUCTOR,
+    interceptors: AxiosClientInterceptors,
+    observer: RequestObserver
+  ) {
     this.observer = observer;
-    this.interceptor = interceptors;
+    const { interceptors: _interceptors, ...restConfig } = config;
 
     this.api = axios.create({
       ...restConfig,
     });
+
+    this.mergedInterceptors = {
+      ...interceptors,
+      ..._interceptors,
+    };
 
     this.api.interceptors.request.use(this.onReqFulfilled, this.onReqRejected);
     this.api.interceptors.response.use(this.onResFulfilled, this.onResRejected);
@@ -140,20 +148,20 @@ class AxiosClient {
   private onReqFulfilled = async (axiosConfig: CustomConfig) => {
     const newConfig = await this.observer.baseRequestIntercept(axiosConfig);
 
-    return this.interceptor?.request?.onFulfilled
-      ? this.interceptor?.request?.onFulfilled(newConfig)
+    return this.mergedInterceptors?.request?.onFulfilled
+      ? this.mergedInterceptors?.request?.onFulfilled(newConfig)
       : newConfig;
   };
 
   private onReqRejected = (error: AxiosError) => {
-    return this.interceptor?.request?.onRejected
-      ? this.interceptor?.request?.onRejected(error)
+    return this.mergedInterceptors?.request?.onRejected
+      ? this.mergedInterceptors?.request?.onRejected(error)
       : Promise.reject(error);
   };
 
   private onResFulfilled = (response: AxiosResponse) => {
-    return this.interceptor?.response?.onFulfilled
-      ? this.interceptor?.response?.onFulfilled(response)
+    return this.mergedInterceptors?.response?.onFulfilled
+      ? this.mergedInterceptors?.response?.onFulfilled(response)
       : response;
   };
 
@@ -163,8 +171,8 @@ class AxiosClient {
     // Check if newError is AxiosError
     if (!axios.isAxiosError(newError)) return newError;
 
-    return this.interceptor?.response?.onRejected
-      ? this.interceptor.response.onRejected(newError as any)
+    return this.mergedInterceptors?.response?.onRejected
+      ? this.mergedInterceptors.response.onRejected(newError as any)
       : newError;
   };
 
@@ -175,6 +183,40 @@ class AxiosClient {
 
 class AxiosInstanceFactory {
   private static observer: RequestObserver;
+  private static internalInterceptor: AxiosClientInterceptors;
+
+  private constructor() {
+    throw new Error('This class cannot be instantiated');
+  }
+
+  private static useInterceptorReq = (
+    onFulfilled: (config: CustomConfig) => CustomConfig,
+    onRejected?: (error: AxiosError) => any
+  ) => {
+    this.internalInterceptor.request.onFulfilled = onFulfilled;
+    if (onRejected) {
+      this.internalInterceptor.request.onRejected = onRejected;
+    }
+  };
+
+  private static useInterceptorRes = (
+    onFulfilled: (response: AxiosResponse) => AxiosResponse,
+    onRejected?: (error: AxiosError) => any
+  ) => {
+    this.internalInterceptor.response.onFulfilled = onFulfilled;
+    if (onRejected) {
+      this.internalInterceptor.response.onRejected = onRejected;
+    }
+  };
+
+  static interceptor = {
+    request: {
+      use: this.useInterceptorReq,
+    },
+    response: {
+      use: this.useInterceptorRes,
+    },
+  };
 
   static use(config: RequestObserverOptions) {
     if (!this.observer) {
@@ -187,8 +229,10 @@ class AxiosInstanceFactory {
       throw new Error('RequestObserver is not registered!');
     }
 
-    return new AxiosClient(config, this.observer).instance;
+    return new AxiosClient(config, this.internalInterceptor, this.observer).instance;
   }
 }
+
+AxiosInstanceFactory.interceptor.request.use((config) => config);
 
 export default AxiosInstanceFactory;
