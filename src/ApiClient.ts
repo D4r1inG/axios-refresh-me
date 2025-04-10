@@ -21,7 +21,7 @@ const BASE_AXIOS_CONSTRUCTOR: AxiosClientContructor = {
       onRejected: (error) => error,
     },
     response: {
-      onFulfilled: (response) => response.data,
+      onFulfilled: (response) => response,
       onRejected: (error) => error,
     },
   },
@@ -125,12 +125,12 @@ class AxiosClient {
   private readonly observer: RequestObserver;
 
   constructor(
-    config: AxiosClientContructor = BASE_AXIOS_CONSTRUCTOR,
+    config: AxiosClientContructor,
     interceptors: AxiosClientInterceptors,
     observer: RequestObserver
   ) {
     this.observer = observer;
-    const { interceptors: _interceptors, ...restConfig } = config;
+    const { interceptors: _interceptors, ...restConfig } = config || {};
 
     this.api = axios.create({
       ...restConfig,
@@ -138,7 +138,7 @@ class AxiosClient {
 
     this.mergedInterceptors = {
       ...interceptors,
-      ..._interceptors,
+      ...(_interceptors || {}),
     };
 
     this.api.interceptors.request.use(this.onReqFulfilled, this.onReqRejected);
@@ -183,7 +183,7 @@ class AxiosClient {
 
 class AxiosInstanceFactory {
   private static observer: RequestObserver;
-  private static internalInterceptor: AxiosClientInterceptors;
+  private static internalInterceptor: AxiosClientInterceptors = BASE_AXIOS_CONSTRUCTOR.interceptors;
 
   private constructor() {
     throw new Error('This class cannot be instantiated');
